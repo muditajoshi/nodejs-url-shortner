@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URL Shortener</title>
+  <style>
+
+
+    button {
+      padding: 10px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .result {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+ 
+  <div class="container">
+    <h2>URL Shortener</h2>
+    <form id="shortenForm">
+      <label for="longUrl">Enter the long URL:</label>
+      <input type="url" id="longUrl" name="longUrl" required placeholder="https://example.com">
+
+      <label for="customAlias">Custom alias (optional):</label>
+      <input type="text" id="customAlias" name="customAlias" placeholder="Enter custom alias">
+
+      <label for="topic">Topic (optional):</label>
+      <input type="text" id="topic" name="topic" placeholder="Enter topic">
+
+      <button type="submit">Shorten URL</button>
+    </form>
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    document.getElementById("shortenForm").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const longUrl = document.getElementById("longUrl").value;
+      const customAlias = document.getElementById("customAlias").value;
+      const topic = document.getElementById("topic").value;
+
+      const response = await fetch("/api/shorten", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ longUrl, customAlias, topic })
+      });
+      const data = await response.json();
+
+      const resultDiv = document.getElementById("result");
+      if (response.ok) {
+        resultDiv.innerHTML = `Shortened URL: <a href="${data.shortUrl}" target="_blank">${data.shortUrl}</a><br>Created At: ${new Date(data.createdAt).toLocaleString()}`;
+      } else {
+        resultDiv.innerHTML = `Error: ${data.error}`;
+      }
+    });
+  </script>
+</body>
+</html>
