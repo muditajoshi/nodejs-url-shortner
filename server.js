@@ -66,7 +66,7 @@ redisClient.once("ready", () => {
       {
         clientID: process.env.clientid,
         clientSecret: process.env.clientsecret,
-        callbackURL: "http://localhost:5000/auth/google/callback",
+        callbackURL: "https://short-url-app-one.vercel.app/auth/google/callback",
       },
       async (accessToken, refreshToken, profile, cb) => {
         try {
