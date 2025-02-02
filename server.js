@@ -184,7 +184,7 @@ redisClient.once("ready", () => {
     await redisClient.set(shortUrl, longUrl);
 
     res.status(200).send({
-      shortUrl: `http://localhost:5000/${shortUrl}`,
+      shortUrl: `https://short-url-app-one.vercel.app/${shortUrl}`,
       createdAt: url.createdAt,
     });
   });
