@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "builds": [],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "https://registry.hub.docker.com/r/sharmarajat575/short-url-app:latest"
+    }
+  ]
+}

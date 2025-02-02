@@ -11,7 +11,14 @@ const morgan = require("morgan");
 const passport = require("passport");
 const { nanoid } = require("nanoid");
 const redis = require("redis");
-const redisClient = redis.createClient();
+const redisClient = redis.createClient({
+  username: "mudita joshi",
+  password: "KfxajCb#TNa8cfe",
+  socket: {
+    host: "redis-13140.crce182.ap-south-1-1.ec2.redns.redis-cloud.com",
+    port: 13140,
+  },
+});
 const axios = require("axios");
 const rateLimit = require("express-rate-limit");
 const { RedisStore } = require("rate-limit-redis");
@@ -19,9 +26,9 @@ const swaggerUi = require("swagger-ui-express");
 const swaggerDocs = require("./config/swagger");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
 
-const URL = require('./models/url'); 
-const User = require('./models/User'); 
-const ClickAnalytics = require('./models/analytics');
+const URL = require("./models/URL.js");
+const User = require("./models/User.js");
+const ClickAnalytics = require("./models/Analytics.js");
 
 redisClient.on("error", (err) => console.error("Redis Error:", err));
 redisClient.on("ready", () => console.log("Redis client connected"));
@@ -34,8 +41,8 @@ redisClient.once("ready", () => {
     }),
     windowMs: 60 * 1000,
     max: 20,
-    message: "Too many requests, please try again later."
-    ,skip: () => process.env.NODE_ENV === "test", 
+    message: "Too many requests, please try again later.",
+    skip: () => process.env.NODE_ENV === "test",
   });
 
   app.use(bodyParser.json());
@@ -43,11 +50,14 @@ redisClient.once("ready", () => {
   app.use(morgan("dev"));
   app.use(cors({ origin: "http://localhost:5000", credentials: true }));
   app.use(
-    expressSession({ secret: "1234ght", resave: true, saveUninitialized: true })
+    expressSession({
+      secret: process.env.SESSION_SECRET,
+      resave: true,
+      saveUninitialized: true,
+    })
   );
   app.use(limiter);
   app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
-
 
   connectDB();
 
@@ -106,59 +116,58 @@ redisClient.once("ready", () => {
     (req, res) => res.redirect("/url-shortner")
   );
 
-
   // Swagger documentation code
 
-// Swagger comments for URL Shortener API
-/**
- * @swagger
- * components:
- *   schemas:
- *     URL:
- *       type: object
- *       properties:
- *         longUrl:
- *           type: string
- *           description: The long URL that needs to be shortened
- *         shortUrl:
- *           type: string
- *           description: The generated shortened URL
- *         topic:
- *           type: string
- *           description: The topic for categorizing the URL
- *       required:
- *         - longUrl
- *         - shortUrl
- */
+  // Swagger comments for URL Shortener API
+  /**
+   * @swagger
+   * components:
+   *   schemas:
+   *     URL:
+   *       type: object
+   *       properties:
+   *         longUrl:
+   *           type: string
+   *           description: The long URL that needs to be shortened
+   *         shortUrl:
+   *           type: string
+   *           description: The generated shortened URL
+   *         topic:
+   *           type: string
+   *           description: The topic for categorizing the URL
+   *       required:
+   *         - longUrl
+   *         - shortUrl
+   */
 
-/**
- * @swagger
- * /api/shorten:
- *   post:
- *     summary: Shorten a URL
- *     description: This endpoint takes a long URL and returns a shortened URL.
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/URL'
- *     responses:
- *       200:
- *         description: Successfully created short URL
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 shortUrl:
- *                   type: string
- *                   description: The shortened URL
- *       400:
- *         description: Invalid input or custom alias already taken
- *       500:
- *         description: Internal server error
- */
+  /**
+   * @swagger
+   * /api/shorten:
+   *   post:
+   *     summary: Shorten a URL
+   *     description: This endpoint takes a long URL and returns a shortened URL.
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/URL'
+   *     responses:
+   *       200:
+   *         description: Successfully created short URL
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 shortUrl:
+   *                   type: string
+   *                   description: The shortened URL
+   *       400:
+   *         description: Invalid input or custom alias already taken
+   *       500:
+   *         description: Internal server error
+   */
 
   app.post("/api/shorten", async (req, res) => {
     const { longUrl, customAlias, topic } = req.body;
@@ -181,24 +190,24 @@ redisClient.once("ready", () => {
   });
 
   /**
- * @swagger
- * /api/shorten/{shortUrl}:
- *   get:
- *     summary: Redirect to the long URL from short URL
- *     description: This endpoint redirects a short URL to its corresponding long URL.
- *     parameters:
- *       - name: shortUrl
- *         in: path
- *         required: true
- *         description: The shortened URL identifier
- *         schema:
- *           type: string
- *     responses:
- *       302:
- *         description: Redirect to the long URL
- *       404:
- *         description: URL not found
- */
+   * @swagger
+   * /api/shorten/{shortUrl}:
+   *   get:
+   *     summary: Redirect to the long URL from short URL
+   *     description: This endpoint redirects a short URL to its corresponding long URL.
+   *     parameters:
+   *       - name: shortUrl
+   *         in: path
+   *         required: true
+   *         description: The shortened URL identifier
+   *         schema:
+   *           type: string
+   *     responses:
+   *       302:
+   *         description: Redirect to the long URL
+   *       404:
+   *         description: URL not found
+   */
   app.get("/:shortUrl", async (req, res) => {
     try {
       const { shortUrl } = req.params;
@@ -218,67 +227,67 @@ redisClient.once("ready", () => {
   });
 
   /**
- * @swagger
- * /api/analytics/{alias}:
- *   get:
- *     summary: Get click analytics for a specific short URL
- *     description: Fetch analytics for a given short URL including click count, unique users, etc.
- *     parameters:
- *       - name: alias
- *         in: path
- *         required: true
- *         description: The short URL alias to fetch analytics for
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Analytics data for the short URL
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 totalClicks:
- *                   type: integer
- *                   description: Total number of clicks for the short URL
- *                 uniqueUsers:
- *                   type: integer
- *                   description: Number of unique users who clicked the URL
- *                 clicksByDate:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       date:
- *                         type: string
- *                         format: date
- *                       clicks:
- *                         type: integer
- *                 osType:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       osName:
- *                         type: string
- *                       uniqueClicks:
- *                         type: integer
- *                       uniqueUsers:
- *                         type: integer
- *                 deviceType:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       deviceName:
- *                         type: string
- *                       uniqueClicks:
- *                         type: integer
- *                       uniqueUsers:
- *                         type: integer
- *       404:
- *         description: URL not found
- */
+   * @swagger
+   * /api/analytics/{alias}:
+   *   get:
+   *     summary: Get click analytics for a specific short URL
+   *     description: Fetch analytics for a given short URL including click count, unique users, etc.
+   *     parameters:
+   *       - name: alias
+   *         in: path
+   *         required: true
+   *         description: The short URL alias to fetch analytics for
+   *         schema:
+   *           type: string
+   *     responses:
+   *       200:
+   *         description: Analytics data for the short URL
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 totalClicks:
+   *                   type: integer
+   *                   description: Total number of clicks for the short URL
+   *                 uniqueUsers:
+   *                   type: integer
+   *                   description: Number of unique users who clicked the URL
+   *                 clicksByDate:
+   *                   type: array
+   *                   items:
+   *                     type: object
+   *                     properties:
+   *                       date:
+   *                         type: string
+   *                         format: date
+   *                       clicks:
+   *                         type: integer
+   *                 osType:
+   *                   type: array
+   *                   items:
+   *                     type: object
+   *                     properties:
+   *                       osName:
+   *                         type: string
+   *                       uniqueClicks:
+   *                         type: integer
+   *                       uniqueUsers:
+   *                         type: integer
+   *                 deviceType:
+   *                   type: array
+   *                   items:
+   *                     type: object
+   *                     properties:
+   *                       deviceName:
+   *                         type: string
+   *                       uniqueClicks:
+   *                         type: integer
+   *                       uniqueUsers:
+   *                         type: integer
+   *       404:
+   *         description: URL not found
+   */
   app.get("/api/analytics/:alias", async (req, res) => {
     const { alias } = req.params;
 
@@ -478,10 +487,9 @@ redisClient.once("ready", () => {
     if (data) return JSON.parse(data);
 
     const newData = await cb();
-    redisClient.set(key, JSON.stringify(newData), "EX", 60 * 5); 
+    redisClient.set(key, JSON.stringify(newData), "EX", 60 * 5);
     return newData;
   };
-
 
   app.get("/api/shorten/:shortUrl", async (req, res) => {
     const { shortUrl } = req.params;
@@ -491,10 +499,9 @@ redisClient.once("ready", () => {
       const urlDoc = await URL.findOne({ shortUrl });
       if (!urlDoc) return res.status(404).json({ error: "URL not found" });
       longUrl = urlDoc.longUrl;
-      await redisClient.set(shortUrl, longUrl); 
+      await redisClient.set(shortUrl, longUrl);
     }
 
-    
     const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
     const userAgent = req.headers["user-agent"];
     const geoData = await axios
@@ -502,20 +509,17 @@ redisClient.once("ready", () => {
       .then((res) => res.data.city)
       .catch(() => "Unknown");
 
-   
     await ClickAnalytics.create({
       urlId: shortUrl,
       ipAddress: ip,
       userAgent,
       geoLocation: geoData,
-      os: "Unknown", 
+      os: "Unknown",
       device: "Unknown",
     });
 
- 
     res.redirect(longUrl);
   });
-
 
   app.listen(5000, () => console.log("Server running on port 5000"));
 });
